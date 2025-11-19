@@ -1,0 +1,126 @@
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using SeamLessGoWeb.Services.Interfaces
+@using SeamLessGoWeb.Services.Auth
+@using SeamLessGoWeb.Data
+@using SeamLessGoWeb.Components.Layout
+
+@page "/"
+@page "/login"
+@layout EmptyLayout
+@rendermode InteractiveServer
+
+@inject NavigationManager Nav
+@inject IUserService UserService
+@inject AuthenticationStateProvider AuthStateProvider
+@using SeamLessGoWeb.Models
+
+<div style="display:flex;height:100vh;">
+
+    <div style="flex:1;background-color:#e9f8ea;padding:40px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <h1>Exam Mastery Hub</h1>
+        <p style="max-width:300px;text-align:center;">
+            Unleash your academic success…
+        </p>
+    </div>
+
+    <!-- Right side (login form) -->
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;">
+        <div style="width:350px;">
+            <h2>Sign In</h2>
+
+            <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+
+                <div>
+                    <label>Username or Email</label>
+                    <InputText class="form-control" @bind-Value="loginModel.UserName" />
+                </div>
+
+                <div style="margin-top:15px;">
+                    <label>Password</label>
+                    <InputText InputType="password" class="form-control" @bind-Value="loginModel.Password" />
+                </div>
+
+                <button type="submit" style="margin-top:20px;width:100%;">Sign in</button>
+
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p style="color:red;">@errorMessage</p>
+            }
+        </div>
+    </div>
+
+</div>
+
+@code {
+
+
+    //  [SupplyParameterFromForm]
+    // private UserLoginModel LoginModel { get; set; } = new();
+
+    // private string errorMessage = string.Empty;
+
+    // private async Task HandleLogin()
+    // {
+    //     try
+    //     {
+    //         // Clear previous error messages
+    //         errorMessage = string.Empty;
+
+    //         // Validate input
+    //         if (string.IsNullOrWhiteSpace(LoginModel.UserName))
+    //         {
+    //             errorMessage = "Username or email is required.";
+    //             return;
+    //         }
+
+    //         if (string.IsNullOrWhiteSpace(LoginModel.Password))
+    //         {
+    //             errorMessage = "Password is required.";
+    //             return;
+    //         }
+
+    //         // Attempt login
+    //         var result = await UserService.LoginAsync(LoginModel.UserName, LoginModel.Password);
+
+    //         if (result == null)
+    //         {
+    //             errorMessage = "Invalid username or password.";
+    //             return;
+    //         }
+
+    //         // Save session and navigate
+    //         await ((CustomAuthStateProvider)AuthStateProvider).SaveSession(result);
+    //         Nav.NavigateTo("/Home", forceLoad: true);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         errorMessage = $"An error occurred during login: {ex.Message}";
+    //     }
+    // }
+    [SupplyParameterFromForm]
+    private UserLoginModel loginModel { get; set; } = new();
+
+   // UserLoginModel loginModel = new();
+    string errorMessage = "";
+
+    private async Task HandleLogin()
+    {
+        string test = loginModel.UserName;
+        var result = await UserService.LoginAsync(loginModel.UserName, loginModel.Password);
+
+        if (result == null)
+        {
+            errorMessage = "Invalid username or password.";
+            return;
+        }
+
+        await ((CustomAuthStateProvider)AuthStateProvider).SaveSession(result);
+
+      //  Nav.NavigateTo("/");
+        Nav.NavigateTo("/Home", forceLoad: true);
+    }
+}
