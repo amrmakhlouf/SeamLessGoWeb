@@ -1,4 +1,4 @@
-﻿namespace SeamLessGoWeb.Models
+﻿namespace SeamLessGoWeb.Models.Transactions
 {
     public class TransactionListModel
     {
@@ -9,6 +9,7 @@
         public decimal TotalAmount { get; set; }
         public decimal RemainingAmount { get; set; }
         public bool IsVoided { get; set; }
+        public bool IsTaxVisible { get; set; }
         public DateTime TransactionDate { get; set; }
     }
 }

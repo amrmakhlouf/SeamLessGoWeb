@@ -1,11 +1,23 @@
+/* ============================================
+   MAIN LAYOUT - RTL FIXED
+   ============================================ */
+
 .page {
     position: relative;
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 main {
     flex: 1;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+article {
+    margin: 0 !important;
 }
 
 .sidebar {
@@ -27,54 +39,83 @@ main {
         text-decoration: none;
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
+        .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+            text-decoration: underline;
+        }
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+        .top-row ::deep a:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+/* ============================================
+   RESPONSIVE - MOBILE
+   ============================================ */
 
 @media (max-width: 640.98px) {
     .top-row {
         justify-content: space-between;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+        .top-row ::deep a, .top-row ::deep .btn-link {
+            margin-left: 0;
+        }
 }
+
+/* ============================================
+   RESPONSIVE - DESKTOP (RTL LAYOUT)
+   ============================================ */
 
 @media (min-width: 641px) {
     .page {
-        flex-direction: row;
+        flex-direction: row-reverse; /* RTL - sidebar on right */
     }
 
     .sidebar {
         width: 250px;
         height: 100vh;
-        position: sticky;
+        position: fixed; /* Changed from sticky to fixed */
+        right: 0; /* RTL - stick to right */
         top: 0;
+    }
+
+    main {
+        width: calc(100% - 250px);
+        margin-right: 250px !important; /* RTL - margin on right for sidebar */
+        margin-left: 0 !important;
+        padding: 0 !important;
     }
 
     .top-row {
         position: sticky;
         top: 0;
         z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
         padding-right: 1.5rem !important;
+        padding-left: 2rem !important;
+    }
+
+        .top-row.auth ::deep a:first-child {
+            flex: 1;
+            text-align: right;
+            width: 0;
+        }
+
+    /* CRITICAL FIX - Remove the article padding that causes margin issues */
+    article {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Apply padding to content class instead */
+    .content {
+        padding-right: 1.5rem !important;
+        padding-left: 2rem !important;
     }
 }
+
+/* ============================================
+   ERROR UI
+   ============================================ */
 
 #blazor-error-ui {
     background: lightyellow;

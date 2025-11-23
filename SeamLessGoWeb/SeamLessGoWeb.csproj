@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Pages\Employees\" />
+    <Folder Include="Components\Pages\Warehoues\" />
+    <Folder Include="Components\Pages\Products\" />
     <Folder Include="Mapping\" />
   </ItemGroup>
 

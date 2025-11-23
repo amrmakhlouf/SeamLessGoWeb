@@ -1,0 +1,46 @@
+﻿<div class="table-wrapper">
+    <div class="table-header">
+        <h3>
+            <span class="bi bi-cash-coin"></span>
+            الدفعات
+        </h3>
+        <button class="btn-add">
+            <span class="bi bi-plus-circle"></span>
+            إضافة دفعة
+        </button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>رقم الدفعة</th>
+                <th>التاريخ</th>
+                <th>العميل</th>
+                <th>المبلغ</th>
+                <th>طريقة الدفع</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+     @*        @foreach (var payment in payments)
+            {
+                <tr>
+                    <td>@payment.Number</td>
+                    <td>@payment.Date.ToString("dd/MM/yyyy")</td>
+                    <td>@payment.CustomerName</td>
+                    <td>@payment.Amount.ToString("N2") ₪</td>
+                    <td><span class="payment-method">@payment.PaymentMethod</span></td>
+                    <td>
+                        <button class="btn-icon view"><span class="bi bi-eye"></span></button>
+                        <button class="btn-icon edit"><span class="bi bi-pencil"></span></button>
+                        <button class="btn-icon delete"><span class="bi bi-trash"></span></button>
+                    </td>
+                </tr>
+            } *@
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+}

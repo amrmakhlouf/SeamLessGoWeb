@@ -1,0 +1,434 @@
+﻿@using SeamLessGoWeb.Services.Interfaces
+@using SeamLessGoWeb.Models.Transactions
+@using SeamLessGoWeb.Services.Auth
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject ITransactionService TransactionService
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="invoices-table-container">
+    <!-- Search Bar -->
+    <!-- Search Bar -->
+    <div class="search-section">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="search-box">
+                    <span class="bi bi-search search-icon"></span>
+                    <input type="text"
+                           class="form-control"
+                           placeholder="البحث برقم الفاتورة أو اسم العميل..."
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           @bind:after="OnSearchChanged" />
+                    @if (!string.IsNullOrEmpty(searchText))
+                    {
+                        <button class="btn-clear" @onclick="ClearSearch">
+                            <span class="bi bi-x"></span>
+                        </button>
+                    }
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="date-field">
+                    <label class="date-label">من</label>
+                    <input type="date"
+                           class="form-control"
+                           @bind="dateFrom"
+                           @bind:after="OnSearchChanged" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="date-field">
+                    <label class="date-label">إلى</label>
+                    <input type="date"
+                           class="form-control"
+                           @bind="dateTo"
+                           @bind:after="OnSearchChanged" />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select"
+                        @bind="statusFilter"
+                        @bind:after="OnSearchChanged">
+                    <option value="">كل الحالات</option>
+                    <option value="paid">مدفوع</option>
+                    <option value="partial">مدفوع جزئياً</option>
+                    <option value="unpaid">غير مدفوع</option>
+                </select>
+            </div>
+        </div>
+        @if (filteredTransactions != null && allTransactions != null && filteredTransactions.Count != allTransactions.Count)
+        {
+            <div class="search-results-info">
+                <span class="bi bi-info-circle"></span>
+                عرض <strong>@filteredTransactions.Count</strong> من أصل <strong>@allTransactions.Count</strong> فاتورة
+                <button class="btn btn-link btn-sm" @onclick="ClearAllFilters">إلغاء الفلترة</button>
+            </div>
+        }
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <p>جاري تحميل الفواتير...</p>
+        </div>
+    }
+    else if (filteredTransactions == null || !filteredTransactions.Any())
+    {
+        <div class="no-data">
+            <span class="bi bi-inbox"></span>
+            @if (!string.IsNullOrEmpty(searchText) || dateFrom != null || dateTo != null || !string.IsNullOrEmpty(statusFilter))
+            {
+                <p>لا توجد نتائج مطابقة للبحث</p>
+                <button class="btn btn-outline-primary" @onclick="ClearAllFilters">إلغاء الفلترة</button>
+            }
+            else
+            {
+                <p>لا توجد فواتير</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>رقم الفاتورة</th>
+                        <th>اسم العميل</th>
+                        <th>الموظف</th>
+                        <th>التاريخ</th>
+                        <th>الإجمالي</th>
+                        <th>الصافي</th>
+                        <th>المتبقي</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in filteredTransactions)
+                    {
+                        <tr class="@(expandedTransactionId == transaction.TransactionID ? "expanded" : "")">
+                            <td>
+                                <button class="btn btn-sm btn-link expand-btn"
+                                        @onclick="() => ToggleExpand(transaction.TransactionID)">
+                                    <span class="bi @(expandedTransactionId == transaction.TransactionID ? "bi-chevron-down" : "bi-chevron-left")"></span>
+                                </button>
+                            </td>
+                            <td>@transaction.TransactionID</td>
+                            <td>@transaction.CustomerName</td>
+                            <td>@transaction.EmployeeName</td>
+                            <td>@transaction.TransactionDate.ToString("yyyy-MM-dd")</td>
+                            <td>@transaction.TotalAmount.ToString("N2")</td>
+                            <td>@transaction.NetAmount.ToString("N2")</td>
+                            <td>@transaction.RemainingAmount.ToString("N2")</td>
+                            <td>
+                                @if (transaction.IsVoided)
+                                {
+                                    <span class="badge bg-danger">ملغي</span>
+                                }
+                                else if (transaction.RemainingAmount == 0)
+                                {
+                                    <span class="badge bg-success">مدفوع</span>
+                                }
+                                else if (transaction.RemainingAmount < transaction.TotalAmount)
+                                {
+                                    <span class="badge bg-warning">مدفوع جزئياً</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">غير مدفوع</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    @if (isAdmin)
+                                    {
+                                        <button class="btn btn-sm btn-info"
+                                                @onclick="() => ToggleTaxVisibility(transaction.TransactionID, transaction.IsTaxVisible)"
+                                                disabled="@transaction.IsVoided"
+                                                title="@(transaction.IsTaxVisible ? "إخفاء الضريبة" : "إظهار الضريبة")">
+                                            <span class="bi @(transaction.IsTaxVisible ? "bi-eye-slash" : "bi-eye")"></span>
+                                        </button>
+                                    }
+                                    <button class="btn btn-sm btn-primary"
+                                            @onclick="() => EditTransaction(transaction.TransactionID)"
+                                            disabled="@transaction.IsVoided">
+                                        <span class="bi bi-pencil"></span>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            @onclick="() => VoidTransaction(transaction.TransactionID)"
+                                            disabled="@transaction.IsVoided">
+                                        <span class="bi bi-x-circle"></span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @if (expandedTransactionId == transaction.TransactionID)
+                        {
+                            <tr class="transaction-lines-row">
+                                <td colspan="10">
+                                    <div class="transaction-lines">
+                                        @if (isLoadingLines)
+                                        {
+                                            <div class="text-center p-3">
+                                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                                <span>جاري تحميل التفاصيل...</span>
+                                            </div>
+                                        }
+                                        else if (transactionLines != null && transactionLines.Any())
+                                        {
+                                            <h6 class="mb-3">تفاصيل الفاتورة</h6>
+                                            <table class="table table-sm table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>المنتج</th>
+                                                        <th>الوحدة</th>
+                                                        <th>الكمية</th>
+                                                        <th>السعر</th>
+                                                        <th>الخصم</th>
+                                                        <th>الإجمالي</th>
+                                                        <th>ملاحظات</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var line in transactionLines)
+                                                    {
+                                                        <tr>
+                                                            <td>@line.ItemName</td>
+                                                            <td>@line.PackName</td>
+                                                            <td>@line.Quantity</td>
+                                                            <td>@line.ItemPrice.ToString("N2")</td>
+                                                            <td>
+                                                                @line.DiscountAmount.ToString("N2")
+                                                                @if (line.DiscountPerc > 0)
+                                                                {
+                                                                    <span class="text-muted">(@line.DiscountPerc.ToString("N1")%)</span>
+                                                                }
+                                                            </td>
+                                                            <td>@line.TotalPrice.ToString("N2")</td>
+                                                            <td>@line.Note</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted">لا توجد تفاصيل لهذه الفاتورة</p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    // Data
+    private List<TransactionListModel> allTransactions; // All transactions from DB
+    private List<TransactionListModel> filteredTransactions; // Filtered results
+    private List<TransactionLineModel> transactionLines;
+
+    // UI State
+    private string expandedTransactionId = null;
+    private bool isLoading = true;
+    private bool isLoadingLines = false;
+    private bool isAdmin = false;
+    private bool isInitialized = false;
+
+
+
+    // Search/Filter
+    private string searchText = "";
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+    private string statusFilter = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isInitialized)
+        {
+            isInitialized = true;
+            await CheckUserRole();
+            await LoadTransactions();
+            StateHasChanged();
+        }
+    }
+
+    private async Task CheckUserRole()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value;
+            isAdmin = roleClaim == "1";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking user role: {ex.Message}");
+            isAdmin = false;
+        }
+    }
+
+    private async Task LoadTransactions()
+    {
+        isLoading = true;
+        try
+        {
+            allTransactions = await TransactionService.GetTransactionsByTypeAsync(1, isAdmin);
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading transactions: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (allTransactions == null)
+        {
+            filteredTransactions = new List<TransactionListModel>();
+            return;
+        }
+
+        var filtered = allTransactions.AsEnumerable();
+
+        // Text search
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            filtered = filtered.Where(t =>
+                t.TransactionID.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                t.CustomerName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                t.EmployeeName.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        // Date range filter
+        if (dateFrom.HasValue)
+        {
+            filtered = filtered.Where(t => t.TransactionDate.Date >= dateFrom.Value.Date);
+        }
+        if (dateTo.HasValue)
+        {
+            filtered = filtered.Where(t => t.TransactionDate.Date <= dateTo.Value.Date);
+        }
+
+        // Status filter
+        if (!string.IsNullOrEmpty(statusFilter))
+        {
+            filtered = statusFilter switch
+            {
+                "paid" => filtered.Where(t => !t.IsVoided && t.RemainingAmount == 0),
+                "partial" => filtered.Where(t => !t.IsVoided && t.RemainingAmount > 0 && t.RemainingAmount < t.TotalAmount),
+                "unpaid" => filtered.Where(t => !t.IsVoided && t.RemainingAmount == t.TotalAmount),
+                _ => filtered
+            };
+        }
+
+        filteredTransactions = filtered.ToList();
+    }
+
+    private void OnSearchChanged()
+    {
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        searchText = "";
+        ApplyFilters();
+    }
+
+    private void ClearAllFilters()
+    {
+        searchText = "";
+        dateFrom = null;
+        dateTo = null;
+        statusFilter = "";
+        ApplyFilters();
+    }
+
+    private async Task ToggleExpand(string transactionId)
+    {
+        if (expandedTransactionId == transactionId)
+        {
+            expandedTransactionId = null;
+            transactionLines = null;
+        }
+        else
+        {
+            expandedTransactionId = transactionId;
+            await LoadTransactionLines(transactionId);
+        }
+    }
+
+    private async Task LoadTransactionLines(string transactionId)
+    {
+        isLoadingLines = true;
+        try
+        {
+            transactionLines = await TransactionService.GetTransactionLinesAsync(transactionId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading transaction lines: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingLines = false;
+        }
+    }
+
+    private async Task ToggleTaxVisibility(string transactionId, bool currentValue)
+    {
+        try
+        {
+            await TransactionService.ToggleTaxVisibility(transactionId, !currentValue);
+            await LoadTransactions();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling tax visibility: {ex.Message}");
+        }
+    }
+
+    private async Task VoidTransaction(string transactionId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "هل أنت متأكد من إلغاء هذه الفاتورة؟"))
+        {
+            try
+            {
+                await TransactionService.VoidTransaction(transactionId);
+                await LoadTransactions();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error voiding transaction: {ex.Message}");
+            }
+        }
+    }
+
+    private void EditTransaction(string transactionId)
+    {
+        Console.WriteLine($"Edit transaction: {transactionId}");
+    }
+}

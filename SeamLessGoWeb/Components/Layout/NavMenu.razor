@@ -1,27 +1,167 @@
-﻿<div class="sidebar-container">
-    <div class="top-row ps-3 navbar navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="">SeamLessGoWeb</a>
-        </div>
-    </div>
-    <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-    <div class="nav-scrollable rtl" onclick="document.querySelector('.navbar-toggler').click()">
-        <nav class="flex-column">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="tax-visible-transactions">
-                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="weather">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-                </NavLink>
-            </div>
-        </nav>
+﻿@rendermode InteractiveServer
+
+<div class="top-row navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <img src="/img/logo.svg" alt="Logo" style="width:40px;height:40px;margin-left:10px;filter:brightness(0) invert(1);" />
+            <span>نظام الإدارة</span>
+        </a>
     </div>
 </div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable">
+    <nav class="flex-column">
+        <!-- الرئيسية - HOME -->
+        <div class="nav-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill"></span>
+                <span class="menu-text">الرئيسية</span>
+            </NavLink>
+        </div>
+
+        <!-- العملاء - CUSTOMERS -->
+        <div class="nav-item">
+            <a class="nav-link menu-header" @onclick="ToggleCustomers" @onclick:preventDefault="true" href="javascript:void(0)">
+                <span class="bi bi-people-fill"></span>
+                <span class="menu-text">العملاء</span>
+                <span class="arrow-icon">@(showCustomers ? "▲" : "▼")</span>
+            </a>
+            @if (showCustomers)
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link submenu-link" href="customers/list">
+                        <span class="menu-text">قائمة العملاء</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="customers/add">
+                        <span class="menu-text">إضافة عميل</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="customers/transactions">
+                        <span class="menu-text">الحركات</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="customers/reports">
+                        <span class="menu-text">تقارير العملاء</span>
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        <!-- الموظفين - EMPLOYEES -->
+        <div class="nav-item">
+            <a class="nav-link menu-header" @onclick="ToggleEmployees" @onclick:preventDefault="true" href="javascript:void(0)">
+                <span class="bi bi-person-badge-fill"></span>
+                <span class="menu-text">الموظفين</span>
+                <span class="arrow-icon">@(showEmployees ? "▲" : "▼")</span>
+            </a>
+            @if (showEmployees)
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link submenu-link" href="employees/list">
+                        <span class="menu-text">قائمة الموظفين</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="employees/add">
+                        <span class="menu-text">إضافة موظف</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="employees/attendance">
+                        <span class="menu-text">الحضور والانصراف</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="employees/payroll">
+                        <span class="menu-text">الرواتب</span>
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        <!-- المنتجات - PRODUCTS -->
+        <div class="nav-item">
+            <a class="nav-link menu-header" @onclick="ToggleProducts" @onclick:preventDefault="true" href="javascript:void(0)">
+                <span class="bi bi-box-seam-fill"></span>
+                <span class="menu-text">المنتجات</span>
+                <span class="arrow-icon">@(showProducts ? "▲" : "▼")</span>
+            </a>
+            @if (showProducts)
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link submenu-link" href="products/list">
+                        <span class="menu-text">قائمة المنتجات</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="products/add">
+                        <span class="menu-text">إضافة منتج</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="products/categories">
+                        <span class="menu-text">التصنيفات</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="products/inventory">
+                        <span class="menu-text">المخزون</span>
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        <!-- المستودعات - WAREHOUSES -->
+        <div class="nav-item">
+            <a class="nav-link menu-header" @onclick="ToggleWarehouses" @onclick:preventDefault="true" href="javascript:void(0)">
+                <span class="bi bi-building"></span>
+                <span class="menu-text">المستودعات</span>
+                <span class="arrow-icon">@(showWarehouses ? "▲" : "▼")</span>
+            </a>
+            @if (showWarehouses)
+            {
+                <div class="submenu">
+                    <NavLink class="nav-link submenu-link" href="warehouses/list">
+                        <span class="menu-text">قائمة المستودعات</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="warehouses/add">
+                        <span class="menu-text">إضافة مستودع</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="warehouses/transfer">
+                        <span class="menu-text">نقل بين المستودعات</span>
+                    </NavLink>
+                    <NavLink class="nav-link submenu-link" href="warehouses/reports">
+                        <span class="menu-text">تقارير المستودعات</span>
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        <!-- الإعدادات - SETTINGS -->
+        <div class="nav-item">
+            <NavLink class="nav-link" href="settings">
+                <span class="bi bi-gear-fill"></span>
+                <span class="menu-text">الإعدادات</span>
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool showCustomers = false;
+    private bool showEmployees = false;
+    private bool showProducts = false;
+    private bool showWarehouses = false;
+
+    private void ToggleCustomers()
+    {
+        showCustomers = !showCustomers;
+        StateHasChanged();
+    }
+
+    private void ToggleEmployees()
+    {
+        showEmployees = !showEmployees;
+        StateHasChanged();
+    }
+
+    private void ToggleProducts()
+    {
+        showProducts = !showProducts;
+        StateHasChanged();
+    }
+
+    private void ToggleWarehouses()
+    {
+        showWarehouses = !showWarehouses;
+        StateHasChanged();
+    }
+}

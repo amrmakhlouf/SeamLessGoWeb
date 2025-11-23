@@ -7,11 +7,11 @@ namespace SeamLessGoWeb.Data.Entities
     public class TransactionEntity
     {
         [Key]
-        public string TransactionID { get; set; }
+        public string TransactionID { get; set; } = null!;
         [Required]
         [ForeignKey("Customer")]
         public Guid CustomerID { get; set; }
-        public CustomerEntity Customer { set; get; }
+        public CustomerEntity Customer { set; get; } = null!;
 
         [Required]
         public DateTime TransactionDate { get; set; }
@@ -22,7 +22,7 @@ namespace SeamLessGoWeb.Data.Entities
         [Required]
         [ForeignKey("TransactionType")]
         public int TransactionTypeID { get; set; }
-        public TransactionTypeEntity TransactionType { set; get; }
+        public TransactionTypeEntity TransactionType { set; get; } = null!;
 
 
         [Required]
@@ -54,35 +54,36 @@ namespace SeamLessGoWeb.Data.Entities
         [Required]
         [ForeignKey("CreatedByUser")]
         public int CreatedByUserID { get; set; }
-        public UserEntity CreatedByUser { set; get; }
+        public UserEntity CreatedByUser { set; get; } = null!;
 
+        [ForeignKey("Route")]
         public int? RouteID { get; set; }
-        public RouteEntity Route { set; get; }
+        public RouteEntity? Route { get; set; }
 
         [Required]
         [ForeignKey("Currency")]
         public int CurrencyID { get; set; }
-        public CurrencyEntity Currency { set; get; }
+        public CurrencyEntity Currency { set; get; } = null!;
 
         [Required]
         public bool IsVoided { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
 
         [ForeignKey("SourceTransaction")]
-        public string SourceTransactionID { get; set; }
-        public TransactionEntity SourceTransaction { set; get; }
+        public string? SourceTransactionID { get; set; }
+        public TransactionEntity? SourceTransaction { set; get; }
 
 
         [ForeignKey("SourceOrder")]
-        public string SourceOrderID { get; set; }
-        public OrderEntity SourceOrder { set; get; }
-
-        [Required]
-        public byte SyncStatus { get; set; }
+        public string? SourceOrderID { get; set; }
+        public OrderEntity? SourceOrder { set; get; }
 
         [Required]
         public DateTime LastModifiedUtc { get; set; }
+
+        [Required]
+        public bool IsTaxVisible { get; set; }
         public List<TransactionLineEntity> TransactionLines { get; set; }
     }
 }

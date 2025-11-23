@@ -1,0 +1,65 @@
+﻿@page "/customers/transactions"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<div class="transactions-page">
+    <div class="page-header">
+        <h2>حركات العملاء</h2>
+    </div>
+
+    <div class="tab-menu-wrapper">
+        <div class="tab-menu">
+            <button class="tab-btn @(activeTab == "invoices" ? "active" : "")"
+                    @onclick='() => activeTab = "invoices"'>
+                <span class="bi bi-file-earmark-text"></span>
+                الفواتير
+            </button>
+            <button class="tab-btn @(activeTab == "payments" ? "active" : "")"
+                    @onclick='() => activeTab = "payments"'>
+                <span class="bi bi-cash-coin"></span>
+                الدفعات
+            </button>
+            <button class="tab-btn @(activeTab == "downpayments" ? "active" : "")"
+                    @onclick='() => activeTab = "downpayments"'>
+                <span class="bi bi-wallet2"></span>
+                دفعات تحت الحساب
+            </button>
+        </div>
+
+        @if (activeTab == "invoices")
+        {
+            <div class="tab-menu-actions">
+                <div></div> <!-- Spacer -->
+                <button class="btn btn-primary btn-add-invoice" @onclick="NavigateToAddInvoice">
+                    <span class="bi bi-plus-circle"></span>
+                    إضافة فاتورة
+                </button>
+            </div>
+        }
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="tab-content">
+        @if (activeTab == "invoices")
+        {
+            <InvoicesTable />
+        }
+        else if (activeTab == "payments")
+        {
+            <PaymentsTable />
+        }
+        else if (activeTab == "downpayments")
+        {
+            <DownPaymentsTable />
+        }
+    </div>
+</div>
+
+@code {
+    private string activeTab = "invoices";
+
+    private void NavigateToAddInvoice()
+    {
+        Navigation.NavigateTo("/invoices/add");
+    }
+}
